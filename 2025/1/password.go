@@ -14,7 +14,9 @@ func main() {
 	content := string(dat)
 	moves := strings.Split(content, "\n")
 	password := CalculatePassword(moves)
-	fmt.Print(password)
+	fmt.Printf("%d\n", password)
+	newPassword := CalculateNewPassword(moves)
+	fmt.Printf("%d\n", newPassword)
 }
 
 func check(e error) {
@@ -31,8 +33,29 @@ func CalculatePassword(moves []string) int {
 			continue
 		}
 
-		currentPosition = compensate(adjust(currentPosition, move))
+		currentPosition, _ = compensate(adjust(currentPosition, move), false)
 		if currentPosition == 0 {
+			password++
+		}
+	}
+	return password
+}
+
+func CalculateNewPassword(moves []string) int {
+	currentPosition := 50
+	password := 0
+	for _, move := range moves {
+		if move == "" {
+			continue
+		}
+
+		startedAtZero := currentPosition == 0
+		pos, compensations := compensate(adjust(currentPosition, move), startedAtZero)
+		currentPosition = pos
+
+		if compensations > 0 {
+			password += compensations
+		} else if currentPosition == 0 {
 			password++
 		}
 	}
@@ -52,14 +75,27 @@ func adjust(position int, move string) int {
 	return position - num
 }
 
-func compensate(position int) int {
+func compensate(position int, startedAtZero bool) (int, int) {
+	compensations := 0
+	isBelowZero := position < 0
 	for position < 0 {
 		position += 100
+		compensations++
 	}
 
 	for position > 99 {
 		position -= 100
+		compensations++
 	}
 
-	return position
+	if isBelowZero && compensations > 0 {
+		if position == 0 {
+			compensations++
+		}
+		if startedAtZero {
+			compensations--
+		}
+	}
+
+	return position, compensations
 }
