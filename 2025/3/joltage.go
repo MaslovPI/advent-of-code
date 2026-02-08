@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strings"
 )
@@ -11,8 +12,12 @@ func main() {
 	dat, err := os.ReadFile("input.txt")
 	check(err)
 	content := string(dat)
-	sum := GetSumMaxJoltage(content)
-	fmt.Printf("%d\n", sum)
+
+	sum := GetSumMaxJoltage(content, 2)
+	fmt.Printf("2 digits: %d\n", sum)
+
+	sum = GetSumMaxJoltage(content, 12)
+	fmt.Printf("12 digits: %d\n", sum)
 }
 
 func check(e error) {
@@ -21,11 +26,16 @@ func check(e error) {
 	}
 }
 
-func GetMaximumJoltage(input string) int {
+func GetMaximumJoltage(input string, digits int) (result int) {
 	length := len(input)
-	max_tens, max_tens_id := getMax(input, 0, length-1)
-	max_singles, _ := getMax(input, max_tens_id+1, length)
-	return max_tens*10 + max_singles
+	result = 0
+	id_from := 0
+	for i := digits - 1; i >= 0; i-- {
+		max, max_id := getMax(input, id_from, length-i)
+		id_from = max_id + 1
+		result += max * int(math.Pow(10.0, float64(i)))
+	}
+	return
 }
 
 func getMax(input string, from, to int) (max int, id int) {
@@ -65,11 +75,11 @@ func getNumber(c byte) int {
 	return number
 }
 
-func GetSumMaxJoltage(input string) (sum int) {
+func GetSumMaxJoltage(input string, digits int) (sum int) {
 	banks := strings.Split(strings.TrimLeft(input, "\n"), "\n")
 	sum = 0
 	for _, bank := range banks {
-		sum += GetMaximumJoltage(bank)
+		sum += GetMaximumJoltage(bank, digits)
 	}
 	return
 }
